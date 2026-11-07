@@ -71,7 +71,7 @@ function setTiles(){
 }
 function toLL(x,y){ // base pixel -> latlng per mode
   const X=x*S, Y=y*S*(mode==='2d'?1:0.58);
-  return L.latLng(Y/32, X/32);
+  return L.latLng(Y, X);
 }
 let markers=[];
 function fmt(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
