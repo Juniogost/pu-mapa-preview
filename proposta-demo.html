@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Conceito: Mapa + Disponibilidade + Tour 360 — Parque Universitário (TESTE)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#f5f3ec;color:#1c3a2a}
+  header{background:#1c3a2a;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  header img{height:34px}
+  header b{font-size:16px}
+  .tagteste{background:#d97706;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px}
+  .tagdemo{background:#7c3aed;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px}
+  .wrap{max-width:980px;margin:0 auto;padding:14px}
+  .hero{margin:6px 0 14px}
+  .hero h1{font-size:22px;margin-bottom:4px}
+  .hero p{font-size:14px;color:#4b5e50}
+  .steps{display:flex;gap:8px;margin:10px 0 16px;font-size:12px;flex-wrap:wrap}
+  .step{background:#e7efe4;border-radius:8px;padding:6px 10px;font-weight:600}
+  .quadras{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .qbtn{border:2px solid #1c3a2a;background:#fff;color:#1c3a2a;border-radius:10px;padding:10px 14px;font-size:15px;font-weight:700;cursor:pointer;min-width:64px}
+  .qbtn.on{background:#1c3a2a;color:#fff}
+  .dateline{font-size:12px;color:#4b5e50;margin:4px 0 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .dateline .foto{background:#fef3c7;border:1px solid #d97706;border-radius:8px;padding:6px 10px;font-weight:600;color:#7a4b06}
+  .legenda{display:flex;gap:12px;font-size:12px;margin:6px 0 12px;flex-wrap:wrap}
+  .legenda span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+  .lote{border:none;border-radius:10px;padding:12px 4px;font-size:15px;font-weight:700;cursor:pointer;color:#fff;text-align:center}
+  .lote small{display:block;font-size:10px;font-weight:600;opacity:.9}
+  .disp{background:#16a34a}
+  .res{background:#d97706}
+  .vend{background:#9ca3af;cursor:not-allowed}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .modal.on{display:flex}
+  .card{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:18px}
+  .card h2{font-size:19px;margin-bottom:2px}
+  .badges{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+  .badge{font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px}
+  .bcom{background:#ede9fe;color:#5b21b6}
+  .bsoav{background:#e0f2fe;color:#075985}
+  .bcauc{background:#fee2e2;color:#991b1b}
+  .bdisp{background:#f0fdf4;color:#166534;border:1px solid #16a34a}
+  .bres{background:#fef3c7;color:#7a4b06;border:1px solid #d97706}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+  th,td{padding:7px 6px;text-align:left;border-bottom:1px solid #e5e1d5}
+  th{background:#1c3a2a;color:#fff;font-size:12px}
+  .cta{display:block;text-align:center;text-decoration:none;font-weight:700;border-radius:10px;padding:13px;margin:8px 0;font-size:15px}
+  .cw{background:#16a34a;color:#fff}
+  .cp{background:#1c3a2a;color:#fff}
+  .ct{background:#7c3aed;color:#fff}
+  .voltar{background:none;border:none;color:#4b5e50;font-size:13px;text-decoration:underline;cursor:pointer;margin-top:6px}
+  #tour{position:fixed;inset:0;background:#000;display:none;z-index:60}
+  #tour.on{display:block}
+  #pano{width:100%;height:100%}
+  #fechartour{position:absolute;top:12px;right:12px;z-index:61;background:#fff;border:none;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}
+  .nota{font-size:12px;color:#4b5e50;margin-top:14px;line-height:1.5}
+  footer{font-size:11px;color:#7d8a7d;text-align:center;padding:18px 10px 30px}
+</style>
+</head>
+<body>
+<header>
+  <img src="logo.png" alt="Parque Universitário">
+  <b>Parque Universitário</b> <span style="font-size:12px;opacity:.85">Goiânia/GO</span>
+  <span class="tagteste">ÁREA DE TESTES</span>
+  <span class="tagdemo">PRÉVIA DE CONCEITO</span>
+</header>
+<div class="wrap">
+  <div class="hero">
+    <h1>Escolha a quadra. Toque num lote.</h1>
+    <p>Prévia do fluxo proposto: mapa do loteamento, disponibilidade datada e tour 360&deg;.</p>
+  </div>
+  <div class="steps">
+    <span class="step">1. Quadra</span><span class="step">2. Lote e disponibilidade</span><span class="step">3. Tour 360&deg;</span>
+  </div>
+
+  <div class="quadras" id="quadras"></div>
+
+  <div class="dateline">
+    <span class="foto">Disponibilidade de demonstra&ccedil;&atilde;o &mdash; no produto final vem de foto/planilha datada, atualizada em 07/11/2026</span>
+    <span>e confirmada pelo WhatsApp. Sem consulta em tempo real.</span>
+  </div>
+  <div class="legenda">
+    <span><span class="dot" style="background:#16a34a"></span>Dispon&iacute;vel</span>
+    <span><span class="dot" style="background:#d97706"></span>Reservado</span>
+    <span><span class="dot" style="background:#9ca3af"></span>Vendido</span>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <p class="nota">Valores reais da tabela Provenda de 03/out/2026. Os status de disponibilidade desta pr&eacute;via s&atilde;o fict&iacute;cios, s&oacute; para demonstrar o formato.</p>
+</div>
+
+<div class="modal" id="modal">
+  <div class="card" id="card"></div>
+</div>
+
+<div id="tour">
+  <div id="pano"></div>
+  <button id="fechartour">Fechar tour</button>
+</div>
+
+<footer>Planta decorada meramente ilustrativa. Valores da tabela de 03/out/2026 (Provenda). Disponibilidade sob consulta &mdash; este site &eacute; um teste.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+<script>
+const WA='5562981428585';
+const BRL=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+let LOTES=[], QUADRA=null;
+
+fetch('lotes.json').then(r=>r.json()).then(L=>{
+  LOTES=L;
+  const qs=[...new Set(L.map(e=>e.q))].sort((a,b)=>a-b);
+  const div=document.getElementById('quadras');
+  qs.forEach(q=>{
+    const b=document.createElement('button');
+    b.className='qbtn'; b.textContent='Q'+q;
+    b.onclick=()=>{QUADRA=q;[...div.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');renderGrid();};
+    div.appendChild(b);
+  });
+  div.children[0].click();
+});
+
+// disponibilidade FICTICIA e deterministica, so para demonstrar o formato
+function statusDemo(e){
+  const h=((e.q*100+e.l)*2654435761)%100;
+  return h<64?'disp':(h<79?'res':'vend');
+}
+const ROT={disp:'Disponível',res:'Reservado',vend:'Vendido'};
+
+function renderGrid(){
+  const g=document.getElementById('grid'); g.innerHTML='';
+  LOTES.filter(e=>e.q===QUADRA).sort((a,b)=>a.l-b.l).forEach(e=>{
+    const s=statusDemo(e);
+    const b=document.createElement('button');
+    b.className='lote '+s;
+    b.innerHTML='L'+e.l+'<small>'+ROT[s]+'</small>';
+    if(s!=='vend') b.onclick=()=>abrirLote(e,s);
+    g.appendChild(b);
+  });
+}
+
+function abrirLote(e,s){
+  const c=document.getElementById('card');
+  let badges='';
+  if(e.com) badges+='<span class="badge bcom">Comercial</span>';
+  if(e.soav) badges+='<span class="badge bsoav">Somente à vista / prazo curto</span>';
+  if(e.cauc) badges+='<span class="badge bcauc">Caucionado</span>';
+  badges+='<span class="badge '+(s==='disp'?'bdisp':'bres')+'">'+(s==='disp'?'Disponível em 07/11/2026*':'Reservado em 07/11/2026*')+'</span>';
+  let planos='<tr><th></th><th>À vista</th><th>12x</th><th>24x</th></tr>'+
+    '<tr><td><b>Tabela: '+BRL(e.valor)+'</b></td><td><b>'+BRL(e.avista)+'</b></td><td>'+BRL(e.x12)+'</td><td>'+BRL(e.x24)+'</td></tr>';
+  const msg=encodeURIComponent('Olá! Vi o lote Q'+e.q+' L'+e.l+' do Parque Universitário no mapa e quero confirmar a disponibilidade. ('+e.area+' m², tabela '+BRL(e.valor)+')');
+  c.innerHTML=
+    '<h2>Quadra '+e.q+' — Lote '+e.l+'</h2>'+
+    '<div class="badges">'+badges+'</div>'+
+    '<table>'+planos+'</table>'+
+    '<div style="font-size:13px;color:#4b5e50">Área: <b>'+e.area.toLocaleString('pt-BR')+' m²</b> · '+BRL(e.m2)+'/m²</div>'+
+    '<a class="cta cw" href="https://wa.me/'+WA+'?text='+msg+'">Confirmar disponibilidade no WhatsApp</a>'+
+    '<a class="cta ct" href="#" id="btntour">Entrar no tour 360° do loteamento</a>'+
+    '<a class="cta cp" href="proposta-modelo.pdf">Modelo de proposta (PDF)</a>'+
+    '<div style="font-size:11px;color:#7d8a7d;margin-top:8px">* Status fictício de demonstração. No produto final, a disponibilidade vem de foto/planilha datada e é confirmada pelo WhatsApp.</div>'+
+    '<button class="voltar" onclick="fechar()">voltar</button>';
+  document.getElementById('modal').classList.add('on');
+  document.getElementById('btntour').onclick=ev=>{ev.preventDefault();abrirTour();};
+}
+
+function fechar(){document.getElementById('modal').classList.remove('on');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')fechar();});
+
+let viewer=null;
+function abrirTour(){
+  document.getElementById('tour').classList.add('on');
+  if(!viewer){
+    viewer=pannellum.viewer('pano',{type:'equirectangular',panorama:'pano-demo.jpg',autoLoad:true,autoRotate:-2,compass:false,hfov:100});
+  }
+}
+document.getElementById('fechartour').onclick=()=>document.getElementById('tour').classList.remove('on');
+</script>
+</body>
+</html>
