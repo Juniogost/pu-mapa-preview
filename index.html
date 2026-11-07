@@ -95,7 +95,7 @@ function planos(e){
   let h='';
   h+='<div class="tabs"><button class="on" id="tabA">À vista / curto</button>'+(e.sb?'<button id="tabB">Sem balão</button>':'')+(e.cb?'<button id="tabC">Com balão</button>':'')+'</div>';
   h+='<div id="tabAbody"><table><tr><th>Valor tabela</th><th>À vista</th><th>12x</th><th>24x</th></tr>';
-  h+=`<tr><td>${fmt(e.valor)}</td><td><b>${fmt(e.avista)}</b></td><td>${fmt(e.x12)}</td><td>${fmt(e.x24)}</td></tr></table></div>';
+  h+=`<tr><td>${fmt(e.valor)}</td><td><b>${fmt(e.avista)}</b></td><td>${fmt(e.x12)}</td><td>${fmt(e.x24)}</td></tr></table></div>`;
   if(e.sb){
     h+='<div id="tabBbody" style="display:none"><table><tr><th>Pix</th><th>Ato</th><th>4x entrada</th></tr><tr><td>'+fmt(e.sb.pix)+'</td><td>'+fmt(e.sb.ato)+'</td><td>'+fmt(e.sb.e4)+'</td></tr></table>';
     h+='<table><tr><th>Parcelas</th><th>Mensal</th></tr>';
