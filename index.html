@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Residencial Parque Universitário — Mapa Interativo (TESTE)</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+html,body{margin:0;height:100%;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#f5f3ec}
+#hud{position:fixed;top:0;left:0;right:0;z-index:1000;background:#1c3a2a;color:#fff;display:flex;align-items:center;gap:10px;padding:8px 12px;flex-wrap:wrap}
+#hud img{height:30px;background:#fff;border-radius:6px;padding:2px 6px}
+#hud .tag{background:#d97706;color:#fff;font-weight:700;font-size:11px;padding:2px 8px;border-radius:10px;text-transform:uppercase}
+#hud button{border:0;border-radius:8px;padding:6px 12px;font:700 13px system-ui;cursor:pointer;background:#e7efe4;color:#1c3a2a}
+#hud button.on{background:#d97706;color:#fff}
+#map{position:fixed;inset:0;top:0}
+.leaflet-container{background:#f5f3ec}
+#painel{position:fixed;left:8px;right:8px;bottom:8px;z-index:1100;background:#fff;border-radius:12px;box-shadow:0 2px 14px rgba(0,0,0,.3);max-height:52%;display:flex;flex-direction:column;font-size:14px}
+#ptit{padding:10px 14px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+#pbody{display:none;overflow:auto;padding:0 14px 12px}
+#painel.ab #pbody{display:block}
+#painel.ab #ptit .seta{transform:rotate(180deg)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0}
+td,th{padding:5px 6px;border-bottom:1px solid #eee;text-align:left}
+th{background:#f3f6ef}
+.chip{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11.5px;font-weight:700;margin:2px 2px 0 0}
+.cauc{background:#fef3c7;color:#92400e;border:1px solid #d97706}
+.com{background:#ede9fe;color:#5b21b6}
+.soav{background:#e0f2fe;color:#075985}
+.rev{background:#fee2e2;color:#b91c1c}
+.acoes{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.acoes a{flex:1;min-width:140px;text-align:center;padding:11px;border-radius:8px;font:700 13.5px system-ui;text-decoration:none}
+.wa{background:#16a34a;color:#fff}
+.pdf{background:#1c3a2a;color:#fff}
+.tabs{display:flex;gap:6px;margin:8px 0}
+.tabs button{flex:1;padding:8px;border:1px solid #1c3a2a;background:#fff;border-radius:8px;font:700 12.5px system-ui;cursor:pointer}
+.tabs button.on{background:#1c3a2a;color:#fff}
+#nota{position:fixed;bottom:8px;left:8px;z-index:1050;background:rgba(28,58,42,.92);color:#e5e7eb;font-size:11px;line-height:1.45;padding:7px 10px;border-radius:8px;max-width:min(430px,80vw)}
+#nota b{color:#fbbf24}
+@media (max-width:640px){ #nota{display:none} #painel{max-height:60%} }
+.lotrow{cursor:pointer} .lotrow:hover{background:#f0fdf4}
+</style>
+</head>
+<body>
+<div id="hud">
+  <img src="logo.png" alt="Parque Universitário">
+  <div><strong>Parque Universitário</strong> <span style="font-size:12px;color:#cbd5e1">— Goiânia/GO</span></div>
+  <span class="tag">Área de testes</span>
+  <button id="b2d" class="on">Mapa 2D</button>
+  <button id="b3d">Vista inclinada</button>
+  <button id="blista">Lista de lotes</button>
+</div>
+<div id="map"></div>
+<div id="painel">
+  <div id="ptit"><span id="ptittxt">Toque num lote no mapa</span><span class="seta">▾</span></div>
+  <div id="pbody"></div>
+</div>
+<div id="nota"><b>Aviso:</b> planta decorada meramente ilustrativa. Valores da tabela de 03/out/2026 (Provenda). Disponibilidade sob consulta — este mapa não mostra vendidos em tempo real. Lotes em <b>amarelo tracejado</b> são caucionados. Versão de testes: alguns marcadores ainda em revisão.</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const W=8192, H=4816, S=0.9249; // base px -> tile px
+const TR = L.transformation(1/32,0,1/32,0);
+const CRS = L.extend({}, L.CRS.Simple, {transformation: TR});
+let mode='2d';
+const map = L.map('map',{crs:CRS, minZoom:0.5, maxZoom:7.5, zoomSnap:0.25, zoomDelta:0.5, attributionControl:false, zoomControl:true});
+map.zoomControl.setPosition('bottomright');
+let tiles=null;
+function setTiles(){
+  if(tiles) map.removeLayer(tiles);
+  const dir = mode==='2d' ? 'tiles' : 'tiles3d';
+  tiles = L.tileLayer(dir+'/{z}/{x}_{y}.jpg',{tileSize:256,noWrap:true,maxNativeZoom:5}).addTo(map);
+}
+function toLL(x,y){ // base pixel -> latlng per mode
+  const X=x*S, Y=y*S*(mode==='2d'?1:0.58);
+  return L.latLng(-Y/32, X/32);
+}
+let markers=[];
+function fmt(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+let LOTES=[];
+function cor(e){
+  if(e.st==='sem-tabela') return {c:'#9ca3af', dash:null};
+  if(e.com) return {c:'#8b5cf6', dash:e.cauc?'4 3':null};
+  return {c:e.cauc?'#d97706':'#22c55e', dash:e.cauc?'4 3':null};
+}
+function draw(){
+  markers.forEach(m=>map.removeLayer(m)); markers=[];
+  LOTES.forEach(e=>{
+    if(e.x==null) return;
+    const {c,dash}=cor(e);
+    const m=L.circleMarker(toLL(e.x,e.y),{radius:5.5,weight:1.5,color:'#11182722'.length?'#374151':'#374151',opacity:.7,fillColor:c,fillOpacity:.92,dashArray:dash}).addTo(map);
+    m.on('click',()=>showLot(e));
+    markers.push(m);
+  });
+}
+function planos(e){
+  let h='';
+  h+='<div class="tabs"><button class="on" id="tabA">À vista / curto</button>'+(e.sb?'<button id="tabB">Sem balão</button>':'')+(e.cb?'<button id="tabC">Com balão</button>':'')+'</div>';
+  h+='<div id="tabAbody"><table><tr><th>Valor tabela</th><th>À vista</th><th>12x</th><th>24x</th></tr>';
+  h+=`<tr><td>${fmt(e.valor)}</td><td><b>${fmt(e.avista)}</b></td><td>${fmt(e.x12)}</td><td>${fmt(e.x24)}</td></tr></table></div>';
+  if(e.sb){
+    h+='<div id="tabBbody" style="display:none"><table><tr><th>Pix</th><th>Ato</th><th>4x entrada</th></tr><tr><td>'+fmt(e.sb.pix)+'</td><td>'+fmt(e.sb.ato)+'</td><td>'+fmt(e.sb.e4)+'</td></tr></table>';
+    h+='<table><tr><th>Parcelas</th><th>Mensal</th></tr>';
+    for(const n of [60,96,120,144,180,204,240]){const v=e.sb.p[String(n)]; if(v>0) h+=`<tr><td>${n}x</td><td>${fmt(v)}</td></tr>`;}
+    h+='</table></div>';
+  }
+  if(e.cb){
+    h+='<div id="tabCbody" style="display:none"><table><tr><th>Pix</th><th>Ato</th><th>4x entrada</th><th>Total entrada</th></tr><tr><td>'+fmt(e.cb.pix)+'</td><td>'+fmt(e.cb.ato)+'</td><td>'+fmt(e.cb.e4)+'</td><td>'+fmt(e.cb.ent)+'</td></tr></table>';
+    h+='<table><tr><th>Prazo</th><th>Mensal</th><th>Balão anual</th></tr>';
+    for(const n of [60,96,120,144,180,204,240]){const v=e.cb.m[String(n)]; if(v>0) h+=`<tr><td>${n}x</td><td>${fmt(v)}</td><td>${fmt(e.cb.b[String(n)])}</td></tr>`;}
+    h+='</table></div>';
+  }
+  return h;
+}
+function showLot(e){
+  const p=document.getElementById('painel'); p.classList.add('ab');
+  document.getElementById('ptittxt').textContent = e.l? `Quadra ${e.q} — Lote ${e.l}` : 'Lote comercial (numeração a confirmar)';
+  const b=document.getElementById('pbody');
+  if(e.l==null){ b.innerHTML='<p>Lote comercial identificado na planta, <b>fora da tabela de 03/out/2026</b>. Valores: <b>a confirmar com a Provenda</b>.</p>'; return; }
+  let chips='';
+  if(e.com) chips+='<span class="chip com">Comercial</span>';
+  if(e.cauc) chips+='<span class="chip cauc">Caucionado</span>';
+  if(e.soav) chips+='<span class="chip soav">Somente à vista / prazo curto</span>';
+  if(e.x==null) chips+='<span class="chip rev">Marcador no mapa em revisão</span>';
+  let h=`<div style="margin:4px 0">${chips}</div>`;
+  h+=`<table><tr><th>Área</th><th>Preço/m²</th></tr><tr><td>${e.area.toLocaleString('pt-BR')} m²</td><td>${fmt(e.m2)}</td></tr></table>`;
+  if(e.valor) h+=planos(e);
+  if(e.cauc) h+='<p style="font-size:12px;color:#92400e"><b>Lote caucionado:</b> o cliente deve ser informado no ato da escolha e constar na proposta de compra e venda.</p>';
+  h+='<div class="acoes"><a class="wa" href="https://wa.me/5562981428585?text='+encodeURIComponent(`Olá! Tenho interesse no lote Q${e.q} L${e.l} do Residencial Parque Universitário.`)+'" target="_blank">Consultar disponibilidade</a>';
+  h+='<a class="pdf" href="proposta-modelo.pdf" target="_blank">Modelo de proposta (PDF)</a></div>';
+  h+='<p style="font-size:11px;color:#6b7280;margin-top:8px">Tabelas completas: <a href="tabela-avista.pdf" target="_blank">à vista</a> · <a href="tabela-sem-balao.pdf" target="_blank">sem balão</a> · <a href="tabela-com-balao.pdf" target="_blank">com balão</a> (03/out/2026)</p>';
+  b.innerHTML=h;
+  const wire=(id,body)=>{const t=document.getElementById(id); if(t) t.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on')); t.classList.add('on'); ['tabAbody','tabBbody','tabCbody'].forEach(x=>{const el=document.getElementById(x); if(el) el.style.display='none'}); document.getElementById(body).style.display='block';};};
+  wire('tabA','tabAbody'); wire('tabB','tabBbody'); wire('tabC','tabCbody');
+}
+function showLista(){
+  const p=document.getElementById('painel'); p.classList.add('ab');
+  document.getElementById('ptittxt').textContent='Lista de lotes';
+  const qs=[...new Set(LOTES.map(e=>e.q))].sort((a,b)=>a-b);
+  let h='<select id="selq" style="width:100%;padding:8px;margin:4px 0">'+qs.map(q=>`<option value="${q}">Quadra ${q}</option>`).join('')+'</select><div id="qrows"></div>';
+  document.getElementById('pbody').innerHTML=h;
+  const render=()=>{
+    const q=+document.getElementById('selq').value;
+    const rows=LOTES.filter(e=>e.q===q).sort((a,b)=>(a.l||99)-(b.l||99));
+    let t='<table><tr><th>Lote</th><th>Área</th><th>Valor</th><th></th></tr>';
+    rows.forEach((e,i)=>{t+=`<tr class="lotrow" data-i="${LOTES.indexOf(e)}"><td>${e.l??'—'}</td><td>${e.area?e.area.toLocaleString('pt-BR')+' m²':''}</td><td>${e.valor?fmt(e.valor):'a confirmar'}</td><td>${e.cauc?'⚠️':''}</td></tr>`;});
+    document.getElementById('qrows').innerHTML=t+'</table>';
+    document.querySelectorAll('.lotrow').forEach(r=>r.onclick=()=>{const e=LOTES[+r.dataset.i]; showLot(e); if(e.x!=null) map.setView(toLL(e.x,e.y),5);});
+  };
+  document.getElementById('selq').onchange=render; render();
+}
+fetch('lotes.json').then(r=>r.json()).then(d=>{LOTES=d; draw();});
+setTiles();
+map.setView(L.latLng(-H/64, W/64), 2);
+document.getElementById('ptit').onclick=()=>document.getElementById('painel').classList.toggle('ab');
+document.getElementById('b2d').onclick=()=>{mode='2d'; setTiles(); draw(); document.getElementById('b2d').classList.add('on'); document.getElementById('b3d').classList.remove('on');};
+document.getElementById('b3d').onclick=()=>{mode='3d'; setTiles(); draw(); document.getElementById('b3d').classList.add('on'); document.getElementById('b2d').classList.remove('on');};
+document.getElementById('blista').onclick=showLista;
+</script>
+</body>
+</html>
