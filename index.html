@@ -149,7 +149,7 @@ function showLista(){
 }
 fetch('lotes.json').then(r=>r.json()).then(d=>{LOTES=d; draw();});
 setTiles();
-map.setView(L.latLng(-H/64, W/64), 2);
+map.fitBounds(L.latLngBounds(toLL(0,0), toLL(W,H)), {padding:[30,30]});
 document.getElementById('ptit').onclick=()=>document.getElementById('painel').classList.toggle('ab');
 document.getElementById('b2d').onclick=()=>{mode='2d'; setTiles(); draw(); document.getElementById('b2d').classList.add('on'); document.getElementById('b3d').classList.remove('on');};
 document.getElementById('b3d').onclick=()=>{mode='3d'; setTiles(); draw(); document.getElementById('b3d').classList.add('on'); document.getElementById('b2d').classList.remove('on');};
